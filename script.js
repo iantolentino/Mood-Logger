@@ -126,6 +126,7 @@ function updateSubmitButton() {
 }
 
 // Update preview section
+// Update preview section
 function updatePreview() {
     const name = nameInput.value.trim();
     const selectedMoodObjects = selectedMoods.map(id => AVAILABLE_MOODS.find(m => m.id === id));
@@ -135,6 +136,7 @@ function updatePreview() {
             <div class="preview-placeholder">
                 <i class="fas fa-smile"></i>
                 <p>Your mood entry will appear here</p>
+                <p class="preview-instruction">Fill out the form to see a preview</p>
             </div>
         `;
         return;
@@ -157,7 +159,11 @@ function updatePreview() {
     moodPreview.innerHTML = `
         <div class="preview-entry">
             <div class="preview-name">${name}</div>
-            <div class="preview-subtitle">Mood Today • ${today}</div>
+            <div class="preview-date">
+                <i class="fas fa-calendar-alt"></i>
+                ${today}
+            </div>
+            <div class="preview-subtitle">Today's Moods:</div>
             <ul class="preview-moods">
                 ${moodList}
             </ul>
