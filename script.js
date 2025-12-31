@@ -4,39 +4,43 @@ const API_URL = BACKEND_BASE_URL + "/mood";
 
 console.log("Backend URL set to:", BACKEND_BASE_URL);
 console.log("API URL set to:", API_URL);
+
 // Available moods with emojis
 const AVAILABLE_MOODS = [
-    { id: 'happy', text: 'Happy', emoji: '😊' },
-    { id: 'sad', text: 'Sad', emoji: '😢' },
-    { id: 'angry', text: 'Angry', emoji: '😠' },
-    { id: 'excited', text: 'Excited', emoji: '🤩' },
-    { id: 'tired', text: 'Tired', emoji: '😴' },
-    { id: 'relaxed', text: 'Relaxed', emoji: '😌' },
-    { id: 'anxious', text: 'Anxious', emoji: '😰' },
-    { id: 'productive', text: 'Productive', emoji: '💪' },
+    { id: 'calm', text: 'Calm', emoji: '☁️' },
+    { id: 'peaceful', text: 'Peaceful', emoji: '🕊️' },
+    { id: 'grateful', text: 'Grateful', emoji: '🙏' },
+    { id: 'hopeful', text: 'Hopeful', emoji: '✨' },
+    { id: 'content', text: 'Content', emoji: '😊' },
+    { id: 'reflective', text: 'Reflective', emoji: '💭' },
+    { id: 'energized', text: 'Energized', emoji: '⚡' },
+    { id: 'balanced', text: 'Balanced', emoji: '⚖️' },
     { id: 'creative', text: 'Creative', emoji: '🎨' },
-    { id: 'grateful', text: 'Grateful', emoji: '🙏' }
+    { id: 'focused', text: 'Focused', emoji: '🎯' },
+    { id: 'restful', text: 'Restful', emoji: '😴' },
+    { id: 'inspired', text: 'Inspired', emoji: '💡' }
 ];
 
 // DOM Elements
 const moodForm = document.getElementById('moodForm');
 const nameInput = document.getElementById('name');
-const dateInput = document.getElementById('date');
-const moodsGrid = document.querySelector('.moods-grid');
-const messageDiv = document.getElementById('message');
-const resetBtn = document.getElementById('resetBtn');
-const apiStatus = document.getElementById('status');
-const currentYearSpan = document.getElementById('currentYear');
+const moodsContainer = document.querySelector('.moods-container');
+const selectedCountEl = document.getElementById('selectedCount');
+const submitBtn = document.getElementById('submitBtn');
+const moodPreview = document.getElementById('moodPreview');
+const themeToggleBtn = document.getElementById('themeToggle');
+const themeIcon = themeToggleBtn.querySelector('i');
+const themeText = themeToggleBtn.querySelector('.theme-text');
 
-// Initialize the app
+// Selected moods array
+let selectedMoods = [];
+
+// Initialize the application
 function init() {
-    // Set current year in footer
-    currentYearSpan.textContent = new Date().getFullYear();
+    // Set current year in footer (if you add it)
+    // currentYearSpan.textContent = new Date().getFullYear();
     
-    // Set today's date as default
-    dateInput.value = new Date().toISOString().split('T')[0];
-    
-    // Create mood checkboxes
+    // Create mood options
     renderMoodOptions();
     
     // Check backend connection
@@ -44,11 +48,18 @@ function init() {
     
     // Set up event listeners
     setupEventListeners();
+    
+    // Update preview
+    updatePreview();
+    
+    // Load saved theme
+    loadSavedTheme();
+    updateThemeToggle();
 }
 
-// Render mood options as clickable cards
+// Render mood options
 function renderMoodOptions() {
-    moodsGrid.innerHTML = '';
+    moodsContainer.innerHTML = '';
     
     AVAILABLE_MOODS.forEach(mood => {
         const moodElement = document.createElement('div');
@@ -60,41 +71,98 @@ function renderMoodOptions() {
         `;
         
         moodElement.addEventListener('click', () => {
-            moodElement.classList.toggle('selected');
-            updateSubmitButton();
+            toggleMoodSelection(mood.id, moodElement);
         });
         
-        moodsGrid.appendChild(moodElement);
+        moodsContainer.appendChild(moodElement);
     });
 }
 
-// Update submit button state based on selection
-function updateSubmitButton() {
-    const selectedMoods = getSelectedMoods();
-    const submitBtn = document.querySelector('.btn-submit');
+// Toggle mood selection
+function toggleMoodSelection(moodId, element) {
+    const index = selectedMoods.indexOf(moodId);
     
-    if (selectedMoods.length >= 3 && selectedMoods.length <= 5) {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = `<i class="fas fa-paper-plane"></i> Log My Mood (${selectedMoods.length}/5)`;
+    if (index === -1) {
+        // Add mood if less than 5 selected
+        if (selectedMoods.length < 5) {
+            selectedMoods.push(moodId);
+            element.classList.add('selected');
+        }
     } else {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = `<i class="fas fa-paper-plane"></i> Select 3-5 Moods (${selectedMoods.length}/5)`;
+        // Remove mood
+        selectedMoods.splice(index, 1);
+        element.classList.remove('selected');
     }
+    
+    updateSelectionCount();
+    updateSubmitButton();
+    updatePreview();
 }
 
-// Get selected moods
-function getSelectedMoods() {
-    const selected = [];
-    document.querySelectorAll('.mood-option.selected').forEach(element => {
-        selected.push(element.dataset.moodId);
-    });
-    return selected;
+// Update selection counter
+function updateSelectionCount() {
+    selectedCountEl.textContent = selectedMoods.length;
 }
 
 // Get mood text by ID
 function getMoodText(moodId) {
     const mood = AVAILABLE_MOODS.find(m => m.id === moodId);
     return mood ? mood.text : moodId;
+}
+
+// Update submit button state
+function updateSubmitButton() {
+    const isValid = selectedMoods.length >= 3 && selectedMoods.length <= 5 && nameInput.value.trim();
+    
+    submitBtn.disabled = !isValid;
+    
+    if (selectedMoods.length < 3) {
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Select at least 3 moods';
+    } else if (selectedMoods.length > 5) {
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Maximum 5 moods';
+    } else {
+        submitBtn.innerHTML = `<i class="fas fa-paper-plane"></i> Send Mood (${selectedMoods.length}/5)`;
+    }
+}
+
+// Update preview section
+function updatePreview() {
+    const name = nameInput.value.trim();
+    const selectedMoodObjects = selectedMoods.map(id => AVAILABLE_MOODS.find(m => m.id === id));
+    
+    if (selectedMoodObjects.length === 0 || !name) {
+        moodPreview.innerHTML = `
+            <div class="preview-placeholder">
+                <i class="fas fa-smile"></i>
+                <p>Your mood entry will appear here</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const moodList = selectedMoodObjects.map(mood => `
+        <li>
+            <span class="mood-emoji">${mood.emoji}</span>
+            ${mood.text}
+        </li>
+    `).join('');
+    
+    const today = new Date().toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    
+    moodPreview.innerHTML = `
+        <div class="preview-entry">
+            <div class="preview-name">${name}</div>
+            <div class="preview-subtitle">Mood Today • ${today}</div>
+            <ul class="preview-moods">
+                ${moodList}
+            </ul>
+        </div>
+    `;
 }
 
 // Check if backend is connected
@@ -105,17 +173,12 @@ async function checkBackendConnection() {
         console.log("Response status:", response.status);
         
         if (response.ok) {
-            apiStatus.textContent = 'Connected';
-            apiStatus.className = 'connected';
             console.log("Backend connection successful!");
         } else {
-            apiStatus.textContent = 'Error: ' + response.status;
-            apiStatus.className = 'disconnected';
+            console.log("Backend returned status:", response.status);
         }
     } catch (error) {
         console.error("Backend connection error:", error);
-        apiStatus.textContent = 'Offline';
-        apiStatus.className = 'disconnected';
     }
 }
 
@@ -126,8 +189,6 @@ function setupEventListeners() {
         e.preventDefault();
         
         const name = nameInput.value.trim();
-        const selectedMoods = getSelectedMoods();
-        const date = dateInput.value;
         
         // Validation
         if (!name) {
@@ -150,11 +211,10 @@ function setupEventListeners() {
         const moodData = {
             name: name,
             moods: selectedMoods.map(getMoodText),
-            date: date
+            date: new Date().toISOString().split('T')[0]
         };
         
         // Disable submit button
-        const submitBtn = document.querySelector('.btn-submit');
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
         
@@ -175,7 +235,6 @@ function setupEventListeners() {
                 // Reset form after successful submission
                 setTimeout(() => {
                     resetForm();
-                    showMessage('', 'success'); // Hide message
                 }, 3000);
             } else {
                 throw new Error(data.detail || 'Failed to send mood');
@@ -185,32 +244,77 @@ function setupEventListeners() {
             showMessage(`✗ Error: ${error.message}`, 'error');
         } finally {
             // Re-enable submit button
-            submitBtn.disabled = false;
-            updateSubmitButton();
+            setTimeout(() => {
+                updateSubmitButton();
+            }, 3000);
         }
     });
     
-    // Reset button
-    resetBtn.addEventListener('click', resetForm);
-    
-    // Update submit button when moods are selected/deselected
-    document.addEventListener('click', (e) => {
-        if (e.target.closest('.mood-option')) {
-            updateSubmitButton();
-        }
+    // Name input validation
+    nameInput.addEventListener('input', () => {
+        updateSubmitButton();
+        updatePreview();
     });
+    
+    // Theme toggle
+    themeToggleBtn.addEventListener('click', toggleTheme);
 }
 
-// Show message
+// Show message function (need to add this to HTML)
 function showMessage(text, type) {
+    // Create message div if it doesn't exist
+    let messageDiv = document.getElementById('message');
+    if (!messageDiv) {
+        messageDiv = document.createElement('div');
+        messageDiv.id = 'message';
+        messageDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: 500;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+            max-width: 300px;
+            box-shadow: var(--shadow-lg);
+        `;
+        document.body.appendChild(messageDiv);
+    }
+    
     messageDiv.textContent = text;
-    messageDiv.className = `message ${type}`;
-    messageDiv.classList.remove('hidden');
+    messageDiv.className = '';
+    
+    if (type === 'success') {
+        messageDiv.style.backgroundColor = '#10b981';
+        messageDiv.style.color = 'white';
+        messageDiv.style.border = 'none';
+    } else if (type === 'error') {
+        messageDiv.style.backgroundColor = '#ef4444';
+        messageDiv.style.color = 'white';
+        messageDiv.style.border = 'none';
+    }
     
     // Auto-hide success messages after 5 seconds
     if (type === 'success') {
         setTimeout(() => {
-            messageDiv.classList.add('hidden');
+            messageDiv.style.opacity = '0';
+            messageDiv.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.parentNode.removeChild(messageDiv);
+                }
+            }, 500);
+        }, 5000);
+    } else if (type === 'error') {
+        setTimeout(() => {
+            messageDiv.style.opacity = '0';
+            messageDiv.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.parentNode.removeChild(messageDiv);
+                }
+            }, 500);
         }, 5000);
     }
 }
@@ -218,19 +322,77 @@ function showMessage(text, type) {
 // Reset form
 function resetForm() {
     nameInput.value = '';
-    dateInput.value = new Date().toISOString().split('T')[0];
+    selectedMoods = [];
     
     // Deselect all moods
     document.querySelectorAll('.mood-option.selected').forEach(element => {
         element.classList.remove('selected');
     });
     
-    messageDiv.classList.add('hidden');
+    updateSelectionCount();
     updateSubmitButton();
+    updatePreview();
     nameInput.focus();
 }
 
+// Theme toggle functionality
+function toggleTheme() {
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    
+    if (isDarkMode) {
+        document.body.classList.remove('dark-mode');
+        document.body.classList.add('light-mode');
+        localStorage.setItem('theme', 'light');
+    } else {
+        document.body.classList.remove('light-mode');
+        document.body.classList.add('dark-mode');
+        localStorage.setItem('theme', 'dark');
+    }
+    
+    updateThemeToggle();
+}
+
+// Update theme toggle button
+function updateThemeToggle() {
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    
+    if (isDarkMode) {
+        themeIcon.className = 'fas fa-sun';
+        themeText.textContent = 'Light Mode';
+    } else {
+        themeIcon.className = 'fas fa-moon';
+        themeText.textContent = 'Dark Mode';
+    }
+}
+
+// Load saved theme from localStorage
+function loadSavedTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    
+    if (savedTheme === 'dark') {
+        document.body.classList.remove('light-mode');
+        document.body.classList.add('dark-mode');
+    } else {
+        document.body.classList.remove('dark-mode');
+        document.body.classList.add('light-mode');
+    }
+}
+
+// Add CSS animation for message
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+`;
+document.head.appendChild(style);
+
 // Initialize the app when DOM is loaded
-
 document.addEventListener('DOMContentLoaded', init);
-
