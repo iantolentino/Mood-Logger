@@ -52,7 +52,7 @@ function init() {
     // Update preview
     updatePreview();
     
-    // Load saved theme
+    // Load saved theme - DARK MODE BY DEFAULT
     loadSavedTheme();
     updateThemeToggle();
 }
@@ -110,6 +110,24 @@ function getMoodText(moodId) {
     return mood ? mood.text : moodId;
 }
 
+// Format name with possessive apostrophe
+function formatNameWithPossessive(name) {
+    if (!name || name.trim() === '') return '';
+    
+    const trimmedName = name.trim();
+    
+    // Capitalize first letter
+    const capitalized = trimmedName.charAt(0).toUpperCase() + trimmedName.slice(1).toLowerCase();
+    
+    // Handle names ending with 's' (add apostrophe only)
+    if (capitalized.toLowerCase().endsWith('s')) {
+        return `${capitalized}'`;
+    }
+    
+    // For other names, add 's
+    return `${capitalized}'s`;
+}
+
 // Update submit button state
 function updateSubmitButton() {
     const isValid = selectedMoods.length >= 3 && selectedMoods.length <= 5 && nameInput.value.trim();
@@ -125,7 +143,6 @@ function updateSubmitButton() {
     }
 }
 
-// Update preview section
 // Update preview section
 function updatePreview() {
     const name = nameInput.value.trim();
@@ -156,9 +173,19 @@ function updatePreview() {
         day: 'numeric'
     });
     
+    // Format date for Telegram (MM/DD/YYYY format)
+    const telegramDate = new Date().toLocaleDateString('en-US', {
+        month: '2-digit',
+        day: '2-digit',
+        year: 'numeric'
+    });
+    
+    // Show possessive name in preview
+    const possessiveName = formatNameWithPossessive(name);
+    
     moodPreview.innerHTML = `
         <div class="preview-entry">
-            <div class="preview-name">${name}</div>
+            <div class="preview-name">${possessiveName} Mood Today</div>
             <div class="preview-date">
                 <i class="fas fa-calendar-alt"></i>
                 ${today}
@@ -213,12 +240,21 @@ function setupEventListeners() {
             return;
         }
         
-        // Prepare data
+        // Get mood texts
+        const moodTexts = selectedMoods.map(getMoodText);
+        
+        // Format name with possessive apostrophe
+        const possessiveName = formatNameWithPossessive(name);
+        
+        // Prepare data - Send possessive name in the name field
         const moodData = {
-            name: name,
-            moods: selectedMoods.map(getMoodText),
-            date: new Date().toISOString().split('T')[0]
+            name: possessiveName, // <-- THIS IS THE KEY CHANGE
+            moods: moodTexts,
+            date: new Date().toISOString().split('T')[0]  // YYYY-MM-DD format
         };
+        
+        console.log("Sending to backend:", moodData);
+        console.log("Expected Telegram message:", `${possessiveName} Mood Today`);
         
         // Disable submit button
         submitBtn.disabled = true;
@@ -255,6 +291,7 @@ function setupEventListeners() {
             }, 3000);
         }
     });
+    
     
     // Name input validation
     nameInput.addEventListener('input', () => {
@@ -371,11 +408,16 @@ function updateThemeToggle() {
     }
 }
 
-// Load saved theme from localStorage
+// Load saved theme from localStorage - MODIFIED TO DEFAULT TO DARK MODE
 function loadSavedTheme() {
     const savedTheme = localStorage.getItem('theme');
     
-    if (savedTheme === 'dark') {
+    // If no theme saved, default to DARK MODE
+    if (!savedTheme) {
+        document.body.classList.remove('light-mode');
+        document.body.classList.add('dark-mode');
+        localStorage.setItem('theme', 'dark'); // Save dark mode preference
+    } else if (savedTheme === 'dark') {
         document.body.classList.remove('light-mode');
         document.body.classList.add('dark-mode');
     } else {
