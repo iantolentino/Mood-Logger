@@ -1,7 +1,9 @@
 // Configuration - UPDATE THIS WITH YOUR RENDER URL
-const API_URL = "https://mood-logger-api.onrender.com";
-const BACKEND_BASE_URL = API_URL.replace('/mood', '');
+const BACKEND_BASE_URL = "https://mood-logger-api.onrender.com";
+const API_URL = BACKEND_BASE_URL + "/mood";
 
+console.log("Backend URL set to:", BACKEND_BASE_URL);
+console.log("API URL set to:", API_URL);
 // Available moods with emojis
 const AVAILABLE_MOODS = [
     { id: 'happy', text: 'Happy', emoji: '😊' },
@@ -225,4 +227,5 @@ function resetForm() {
 }
 
 // Initialize the app when DOM is loaded
+
 document.addEventListener('DOMContentLoaded', init);
