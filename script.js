@@ -100,18 +100,22 @@ function getMoodText(moodId) {
 // Check if backend is connected
 async function checkBackendConnection() {
     try {
+        console.log("Testing backend connection to:", BACKEND_BASE_URL);
         const response = await fetch(BACKEND_BASE_URL);
+        console.log("Response status:", response.status);
+        
         if (response.ok) {
             apiStatus.textContent = 'Connected';
             apiStatus.className = 'connected';
+            console.log("Backend connection successful!");
         } else {
-            apiStatus.textContent = 'Error';
+            apiStatus.textContent = 'Error: ' + response.status;
             apiStatus.className = 'disconnected';
         }
     } catch (error) {
+        console.error("Backend connection error:", error);
         apiStatus.textContent = 'Offline';
         apiStatus.className = 'disconnected';
-        console.warn('Backend is not reachable:', error.message);
     }
 }
 
@@ -229,3 +233,4 @@ function resetForm() {
 // Initialize the app when DOM is loaded
 
 document.addEventListener('DOMContentLoaded', init);
+
