@@ -18,7 +18,22 @@ const AVAILABLE_MOODS = [
     { id: 'creative', text: 'Creative', emoji: '🎨' },
     { id: 'focused', text: 'Focused', emoji: '🎯' },
     { id: 'restful', text: 'Restful', emoji: '😴' },
-    { id: 'inspired', text: 'Inspired', emoji: '💡' }
+    { id: 'inspired', text: 'Inspired', emoji: '💡' },
+  { id: 'upset', text: 'Upset', emoji: '😔' },
+  { id: 'sad', text: 'Sad', emoji: '😢' },
+  { id: 'angry', text: 'Angry', emoji: '😠' },
+  { id: 'frustrated', text: 'Frustrated', emoji: '😣' },
+  { id: 'anxious', text: 'Anxious', emoji: '😰' },
+  { id: 'stressed', text: 'Stressed', emoji: '😖' },
+  { id: 'overwhelmed', text: 'Overwhelmed', emoji: '🌪️' },
+  { id: 'tired', text: 'Tired', emoji: '🥱' },
+  { id: 'lonely', text: 'Lonely', emoji: '🌙' },
+  { id: 'confused', text: 'Confused', emoji: '😕' },
+  { id: 'disappointed', text: 'Disappointed', emoji: '😞' },
+  { id: 'discouraged', text: 'Discouraged', emoji: '⬇️' },
+  { id: 'unmotivated', text: 'Unmotivated', emoji: '🪫' },
+  { id: 'restless', text: 'Restless', emoji: '🔄' },
+  { id: 'numb', text: 'Numb', emoji: '🧊' }
 ];
 
 // DOM Elements
@@ -444,3 +459,4 @@ document.head.appendChild(style);
 
 // Initialize the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', init);
+
